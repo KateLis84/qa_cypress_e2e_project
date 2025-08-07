@@ -1,75 +1,51 @@
-import PageObject from '../PageObject';
-
-class ArticlePageObject extends PageObject {
-  url = '/#/editor';
-
-  get titleField() {
-    return cy.get('[data-qa=article-title-input]');
+class SignUpPageObject {
+  visit() {
+    this.signUpLink.click();
   }
 
-  get aboutField() {
-    return cy.get('[data-qa=article-about-input]');
+  get signUpLink() {
+    return cy.get('[data-qa=sign-up-link]');
   }
 
-  get textField() {
-    return cy.get('[data-qa=article-body-textarea]');
+  get usernameField() {
+    return cy.get('[data-qa=sign-up-username-input]');
   }
 
-  get tagsField() {
-    return cy.get('[data-qa=article-tags-input]');
+  get emailField() {
+    return cy.get('[data-qa=sign-up-email-input]');
   }
 
-  get publishArticleBtn() {
-    return cy.get('[data-qa=publish-article-button]');
+  get passwordField() {
+    return cy.get('[data-qa=sign-up-password-input]');
   }
 
-  get editArticleBtn() {
-    return cy.get('[data-qa=edit-article-button]');
+  get signUpButton() {
+    return cy.get('[data-qa=sign-up-button]');
   }
 
-  get deleteArticleBtn() {
-    return cy.get('[data-qa=delete-article-button]');
+  get errorMessage() {
+    return cy.get('[data-qa=sign-up-error]');
   }
 
-  get newArticleBtn() {
-    return cy.get('[data-qa=new-article-button]');
+  typeUsername(username) {
+    this.usernameField.clear().type(username);
   }
 
-  get noArticlesMessage() {
-    return cy.get('[data-qa=no-articles-message]');
+  typeEmail(email) {
+    this.emailField.clear().type(email);
   }
 
-  typeTitle(title) {
-    this.titleField.clear().type(title);
+  typePassword(password) {
+    this.passwordField.clear().type(password);
   }
 
-  typeAbout(about) {
-    this.aboutField.clear().type(about);
+  clickSignUpButton() {
+    this.signUpButton.click();
   }
 
-  typeText(text) {
-    this.textField.clear().type(text);
-  }
-
-  typeTag(tag) {
-    this.tagsField.clear().type(`${tag}{Enter}`);
-  }
-
-  clickPublishArticleBtn() {
-    this.publishArticleBtn.click();
-  }
-
-  clickEditArticleBtn() {
-    this.editArticleBtn.click();
-  }
-
-  clickDeleteArticleBtn() {
-    this.deleteArticleBtn.click();
-  }
-
-  clickNewArticleBtn() {
-    this.newArticleBtn.click();
+  assertSignUpError() {
+    this.errorMessage.should('be.visible');
   }
 }
 
-export default ArticlePageObject;
+export default SignUpPageObject;

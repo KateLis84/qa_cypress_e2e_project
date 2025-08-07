@@ -2,8 +2,10 @@
 /// <reference types='../support' />
 
 import SignInPageObject from '../support/pages/signIn.pageObject';
+import ProfilePageObject from '../support/pages/profile.pageObject';
 
 const signInPage = new SignInPageObject();
+const profilePage = new ProfilePageObject();
 
 describe('User', () => {
   let userTarget;
@@ -37,14 +39,16 @@ describe('User', () => {
 
     cy.wait('@getFeed');
 
-    cy.visit(`/#/@${userTarget.username}`);
+    profilePage.visit(userTarget.username);
 
-    cy.contains('button', `Follow ${userTarget.username}`).click();
+    profilePage.followToggleButton.click();
     cy.wait('@followUser');
-    cy.contains('button', `Unfollow ${userTarget.username}`).should('be.visible');
+    // eslint-disable-next-line max-len
+    profilePage.followToggleButton.should('be.visible').and('contain.text', 'Unfollow');
 
-    cy.contains('button', `Unfollow ${userTarget.username}`).click();
+    profilePage.followToggleButton.click();
     cy.wait('@unfollowUser');
-    cy.contains('button', `Follow ${userTarget.username}`).should('be.visible');
+    // eslint-disable-next-line max-len
+    profilePage.followToggleButton.should('be.visible').and('contain.text', 'Follow');
   });
 });

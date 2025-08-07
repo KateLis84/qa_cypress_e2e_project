@@ -33,6 +33,6 @@ describe('Sign In page', () => {
     signInPage.typePassword(user.password + 'wrong111');
     signInPage.clickSignInBtn();
 
-    cy.get('[data-qa=login-error]').should('be.visible');
+    signInPage.loginError.should('be.visible');
   });
 });

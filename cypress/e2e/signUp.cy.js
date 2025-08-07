@@ -8,9 +8,9 @@ const homePage = new HomePageObject();
 const signUpPage = new SignUpPageObject();
 
 describe('Sign Up page', () => {
-  let username;
-  let email;
-  let password;
+  let username: string;
+  let email: string;
+  let password: string;
 
   beforeEach(() => {
     cy.task('db:clear');
@@ -30,7 +30,7 @@ describe('Sign Up page', () => {
     signUpPage.typePassword(password);
     signUpPage.clickSignUpButton();
 
-    signUpPage.assertUserLoggedIn(username);
+    homePage.assertHeaderContainUsername(username);
   });
 
   it('should not sign up if email is invalid', () => {

@@ -29,14 +29,10 @@ describe('Settings page', () => {
 
   const openSettings = () => {
     homePage.usernameLink.click();
-    cy.get('[data-qa=edit-profile-settings-link]').click();
+    homePage.editProfileSettingsLink.click();
   };
 
-  it('should provide an ability to log in with existing credentials', () => {
-    homePage.assertHeaderContainUsername(user.username);
-  });
-
-  it('should provide an ability to update username', () => {
+  it('should update username', () => {
     openSettings();
 
     const newUsername = user.username + faker.string.alpha(3);
@@ -49,10 +45,10 @@ describe('Settings page', () => {
     cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
 
     homePage.visit();
-    cy.get('[data-qa=username-link]').should('contain.text', newUsername);
+    homePage.assertHeaderContainUsername(newUsername);
   });
 
-  it('should provide an ability to update bio', () => {
+  it('should update bio and persist it', () => {
     openSettings();
 
     const randomBio = faker.lorem.sentence();
@@ -65,10 +61,10 @@ describe('Settings page', () => {
     cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
 
     cy.visit('/#/settings');
-    cy.get('[data-qa=settings-bio-textarea]').should('have.value', randomBio);
+    settingsPage.bioTextarea.should('have.value', randomBio);
   });
 
-  it('should provide an ability to update email', () => {
+  it('should update email and persist it', () => {
     openSettings();
 
     const newEmail = faker.internet.email();
@@ -81,10 +77,10 @@ describe('Settings page', () => {
     cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
 
     cy.visit('/#/settings');
-    cy.get('[data-qa=settings-email-input]').should('have.value', newEmail);
+    settingsPage.emailInput.should('have.value', newEmail);
   });
 
-  it('should provide an ability to update password', () => {
+  it('should update password and allow login with it', () => {
     openSettings();
 
     const newPassword = faker.internet.password({ length: 12 });
@@ -105,11 +101,10 @@ describe('Settings page', () => {
     homePage.assertHeaderContainUsername(user.username);
   });
 
-  it('should provide an ability to log out', () => {
+  it('should log out from settings', () => {
     openSettings();
 
-    cy.get('[data-qa=logout-button]').click();
-
+    settingsPage.clickLogoutBtn();
     homePage.usernameLink.should('not.exist');
   });
 });
