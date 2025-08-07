@@ -1,6 +1,7 @@
 /// <reference types='cypress' />
 /// <reference types='../support' />
 
+import { faker } from '@faker-js/faker';
 import SignInPageObject from '../support/pages/signIn.pageObject';
 import ArticlePageObject from '../support/pages/articlePage.pageObject';
 
@@ -11,8 +12,6 @@ describe('Article', () => {
   let username;
   let email;
   let password;
-
-  before(() => {});
 
   beforeEach(() => {
     cy.task('db:clear');
@@ -26,59 +25,67 @@ describe('Article', () => {
 
       signInPage.typeEmail(email);
       signInPage.typePassword(password);
-
       signInPage.clickSignInBtn();
     });
   });
 
   it('should be created using New Article form', () => {
-    cy.contains('a', 'New Article').click();
+    articlePage.clickNewArticleBtn();
 
     cy.task('generateArticle').then((article) => {
+      const randomTag = faker.word.noun();
+
       articlePage.typeTitle(article.title);
       articlePage.typeAbout(article.description);
       articlePage.typeText(article.body);
-      articlePage.typeTag('Other');
+      articlePage.typeTag(randomTag);
 
       articlePage.clickPublishArticleBtn();
 
-      cy.contains('h1', article.title).should('be.visible');
+      cy.get('[data-qa=article-title]').should('have.text', article.title);
     });
   });
 
   it('should be edited using Edit button', () => {
-    cy.contains('a', 'New Article').click();
+    articlePage.clickNewArticleBtn();
 
     cy.task('generateArticle').then((article) => {
       articlePage.typeTitle(article.title);
       articlePage.typeAbout(article.description);
       articlePage.typeText(article.body);
-      articlePage.typeTag('Other');
+      articlePage.typeTag(faker.word.noun());
+
+      articlePage.clickPublishArticleBtn();
+      articlePage.clickEditArticleBtn();
+
+      const newTitle = `changedtitle-${Date.now()}`;
+      articlePage.clearTitle().typeTitle(newTitle);
 
       articlePage.clickPublishArticleBtn();
 
-      cy.contains('a', 'Edit Article').click();
-
-      articlePage.typeTitle('changedtitle123');
-      articlePage.clickPublishArticleBtn();
-
-      cy.contains('h1', 'changedtitle123').should('be.visible');
+      cy.get('[data-qa=article-title]').should('have.text', newTitle);
     });
   });
 
   it('should be deleted using Delete button', () => {
-    cy.contains('a', 'New Article').click();
+    articlePage.clickNewArticleBtn();
 
     cy.task('generateArticle').then((article) => {
       articlePage.typeTitle(article.title);
       articlePage.typeAbout(article.description);
       articlePage.typeText(article.body);
-      articlePage.typeTag('Other');
+      articlePage.typeTag(faker.word.noun());
 
       articlePage.clickPublishArticleBtn();
 
-      cy.contains('button', 'Delete Article').click();
-      cy.contains('div', 'No articles are here... yet.');
+      cy.get('[data-qa=article-title]').should('have.text', article.title);
+
+      articlePage.clickDeleteArticleBtn();
+
+      articlePage.noArticlesMessage.should(
+        'contain.text',
+        'No articles are here... yet.'
+      );
     });
   });
 });

@@ -3,93 +3,112 @@
 
 import HomePageObject from '../support/pages/home.pageObject';
 import SignInPageObject from '../support/pages/signIn.pageObject';
+import SettingsPageObject from '../support/pages/settings.pageObject';
+import { faker } from '@faker-js/faker';
 
 const signInPage = new SignInPageObject();
 const homePage = new HomePageObject();
+const settingsPage = new SettingsPageObject();
 
 describe('Settings page', () => {
   let user;
 
-  before(() => {
+  beforeEach(() => {
     cy.task('db:clear');
-    cy.task('generateUser').then((generateUser) => {
-      user = generateUser;
+    cy.task('generateUser').then((generatedUser) => {
+      user = generatedUser;
+
+      signInPage.visit();
       cy.register(user.email, user.username, user.password);
+
+      signInPage.typeEmail(user.email);
+      signInPage.typePassword(user.password);
+      signInPage.clickSignInBtn();
     });
   });
 
-  beforeEach(() => {
-    signInPage.visit();
-
-    signInPage.typeEmail(user.email);
-    signInPage.typePassword(user.password);
-    signInPage.clickSignInBtn();
-  });
+  const openSettings = () => {
+    homePage.usernameLink.click();
+    cy.get('[data-qa=edit-profile-settings-link]').click();
+  };
 
   it('should provide an ability to log in with existing credentials', () => {
     homePage.assertHeaderContainUsername(user.username);
   });
 
   it('should provide an ability to update username', () => {
-    homePage.usernameLink.click();
-    cy.contains('a', 'Edit Profile Settings').click();
+    openSettings();
 
-    cy.get('input[placeholder="Your username"]').clear();
-    cy.get('input[placeholder="Your username"]').type(user.username + '123');
+    const newUsername = user.username + faker.string.alpha(3);
 
-    cy.contains('button', 'Update Settings').click();
+    cy.intercept('PUT', '**/api/user').as('updateUser');
+
+    settingsPage.typeUsername(newUsername);
+    settingsPage.clickUpdateSettingsBtn();
+
+    cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
 
     homePage.visit();
-    cy.contains('a[data-cy="username-link"]', user.username + '123');
+    cy.get('[data-qa=username-link]').should('contain.text', newUsername);
   });
 
   it('should provide an ability to update bio', () => {
-    homePage.usernameLink.click();
-    cy.contains('a', 'Edit Profile Settings').click();
+    openSettings();
 
-    cy.get('textarea[placeholder="Short bio about you"]').clear();
-    cy.get('textarea[placeholder="Short bio about you"]').type(
-      'Just a bio about something'
-    );
+    const randomBio = faker.lorem.sentence();
 
-    cy.contains('button', 'Update Settings').click();
+    cy.intercept('PUT', '**/api/user').as('updateUser');
 
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
-    cy.wait(1000);
+    settingsPage.typeBio(randomBio);
+    settingsPage.clickUpdateSettingsBtn();
 
-    cy.visit(`/#/@${user.username}`);
-    cy.contains('p', 'Just a bio about something').should('be.visible');
+    cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
+
+    cy.visit('/#/settings');
+    cy.get('[data-qa=settings-bio-textarea]').should('have.value', randomBio);
   });
 
-  it('should provide an ability to update an email', () => {
-    homePage.usernameLink.click();
-    cy.contains('a', 'Edit Profile Settings').click();
+  it('should provide an ability to update email', () => {
+    openSettings();
 
-    cy.get('input[placeholder="Email"]').clear();
-    cy.get('input[placeholder="Email"]').type(
-      'myemail@gmail.test'
-    );
+    const newEmail = faker.internet.email();
 
-    cy.contains('button', 'Update Settings').click();
+    cy.intercept('PUT', '**/api/user').as('updateUser');
+
+    settingsPage.typeEmail(newEmail);
+    settingsPage.clickUpdateSettingsBtn();
+
+    cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
+
+    cy.visit('/#/settings');
+    cy.get('[data-qa=settings-email-input]').should('have.value', newEmail);
   });
 
   it('should provide an ability to update password', () => {
-    homePage.usernameLink.click();
-    cy.contains('a', 'Edit Profile Settings').click();
+    openSettings();
 
-    cy.get('input[placeholder="Password"]').clear();
-    cy.get('input[placeholder="Password"]').type(
-      '1234TestPass'
-    );
+    const newPassword = faker.internet.password({ length: 12 });
 
-    cy.contains('button', 'Update Settings').click();
+    cy.intercept('PUT', '**/api/user').as('updateUser');
+
+    settingsPage.typePassword(newPassword);
+    settingsPage.clickUpdateSettingsBtn();
+
+    cy.wait('@updateUser').its('response.statusCode').should('eq', 200);
+
+    settingsPage.clickLogoutBtn();
+
+    signInPage.typeEmail(user.email);
+    signInPage.typePassword(newPassword);
+    signInPage.clickSignInBtn();
+
+    homePage.assertHeaderContainUsername(user.username);
   });
 
   it('should provide an ability to log out', () => {
-    homePage.usernameLink.click();
-    cy.contains('a', 'Edit Profile Settings').click();
+    openSettings();
 
-    cy.get('.btn-outline-danger').click();
+    cy.get('[data-qa=logout-button]').click();
 
     homePage.usernameLink.should('not.exist');
   });

@@ -1,18 +1,16 @@
 /// <reference types='cypress' />
 /// <reference types='../support' />
 
-import SignInPageObject from '../support/pages/signIn.pageObject';
 import HomePageObject from '../support/pages/home.pageObject';
+import SignUpPageObject from '../support/pages/signUp.pageObject';
 
-const signInPage = new SignInPageObject();
 const homePage = new HomePageObject();
+const signUpPage = new SignUpPageObject();
 
 describe('Sign Up page', () => {
   let username;
   let email;
   let password;
-
-  before(() => {});
 
   beforeEach(() => {
     cy.task('db:clear');
@@ -23,23 +21,27 @@ describe('Sign Up page', () => {
     });
   });
 
-  it('should sign up succefully', () => {
-    signInPage.visit();
-    cy.register(email, username, password);
+  it('should sign up successfully', () => {
+    homePage.visit();
+    signUpPage.visit();
+
+    signUpPage.typeUsername(username);
+    signUpPage.typeEmail(email);
+    signUpPage.typePassword(password);
+    signUpPage.clickSignUpButton();
+
+    signUpPage.assertUserLoggedIn(username);
   });
 
-  it('should not sign up if invalid email', () => {
+  it('should not sign up if email is invalid', () => {
     homePage.visit();
-    cy.contains('a', 'Sign up').click();
+    signUpPage.visit();
 
-    cy.get('input[placeholder="Username"]').type('Name12345');
-    cy.get('input[placeholder="Email"]').type('invalid email');
-    cy.get('input[placeholder="Password"]').type('123132');
+    signUpPage.typeUsername('Name12345');
+    signUpPage.typeEmail('invalid email');
+    signUpPage.typePassword('123132');
+    signUpPage.clickSignUpButton();
 
-    cy.contains('button', 'Sign up').click();
-
-    cy.contains('div[class="swal-title"]', 'Registration failed!').should(
-      'be.visible'
-    );
+    signUpPage.assertSignUpError();
   });
 });

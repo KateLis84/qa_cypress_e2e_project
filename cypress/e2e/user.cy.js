@@ -11,33 +11,40 @@ describe('User', () => {
 
   before(() => {
     cy.task('db:clear');
-    cy.task('generateUser').then((generateUser) => {
-      userTarget = generateUser;
+
+    cy.task('generateUser').then((target) => {
+      userTarget = target;
       cy.register(userTarget.email, userTarget.username, userTarget.password);
-      userFollower = generateUser;
-      userFollower.email += 'world';
-      userFollower.username += 'follower';
-      cy.register(
-        userFollower.email,
-        userFollower.username,
-        userFollower.password
-      );
+    });
+
+    cy.task('generateUser').then((follower) => {
+      userFollower = follower;
+      // eslint-disable-next-line max-len
+      cy.register(userFollower.email, userFollower.username, userFollower.password);
     });
   });
 
-  it('should be able to follow the another user', () => {
+  it('should be able to follow and unfollow another user', () => {
     signInPage.visit();
+
+    cy.intercept('POST', `**/api/profiles/${userTarget.username}/follow`).as('followUser');
+    cy.intercept('DELETE', `**/api/profiles/${userTarget.username}/follow`).as('unfollowUser');
+    cy.intercept('GET', '**/api/articles/feed*').as('getFeed');
 
     signInPage.typeEmail(userFollower.email);
     signInPage.typePassword(userFollower.password);
-
     signInPage.clickSignInBtn();
 
-    // eslint-disable-next-line cypress/no-unnecessary-waiting
-    cy.wait(1000);
+    cy.wait('@getFeed');
 
-    cy.visit(`/#/@${userTarget.username.replace('follower', '')}`);
+    cy.visit(`/#/@${userTarget.username}`);
 
-    cy.contains('button', `Follow ${userTarget.username.replace('follower', '')}`).click();
+    cy.contains('button', `Follow ${userTarget.username}`).click();
+    cy.wait('@followUser');
+    cy.contains('button', `Unfollow ${userTarget.username}`).should('be.visible');
+
+    cy.contains('button', `Unfollow ${userTarget.username}`).click();
+    cy.wait('@unfollowUser');
+    cy.contains('button', `Follow ${userTarget.username}`).should('be.visible');
   });
 });
